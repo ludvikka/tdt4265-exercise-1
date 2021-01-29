@@ -12,13 +12,15 @@ def pre_process_images(X: np.ndarray):
     """
     assert X.shape[1] == 784,\
         f"X.shape[1]: {X.shape[1]}, should be 784"
-   
-       
-    X = X.astype(float)
-    X = np.divide(X,127.5) - 1
-    X = np.block([X,np.ones((X.shape[0],1))])
+    # TODO implement this function (Task 2a)
+    
+    mapping_func = lambda x: float(-1 + 2*x/256)
+    v_mapping_func = np.vectorize(mapping_func)
+    X = v_mapping_func(X)
 
+    X = np.hstack((X, np.ones((X.shape[0], 1))))
     return X
+
 
 def cross_entropy_loss(targets: np.ndarray, outputs: np.ndarray) -> float:
     """
@@ -29,18 +31,14 @@ def cross_entropy_loss(targets: np.ndarray, outputs: np.ndarray) -> float:
         Cross entropy error (float)
     """
     # TODO implement this function (Task 2a)
-
     assert targets.shape == outputs.shape,\
         f"Targets shape: {targets.shape}, outputs: {outputs.shape}"
-    
-    
 
-    temp = -((targets*np.log(outputs)) + (1-targets)*np.log(1-outputs))
-    c_e_e = temp.mean()
-    return c_e_e
+    C_n = lambda t, y: -(t*np.log(y) + (1 - t)*np.log(1 - y))
+    v_C_n = np.vectorize(C_n)
+    C = v_C_n(targets, outputs).mean()
 
-
-    
+    return C
 
 
 class BinaryModel:
@@ -51,6 +49,11 @@ class BinaryModel:
         self.w = np.zeros((self.I, 1))
         self.grad = None
 
+        #Defining vectorized functions here for efficiency
+        grad_func = lambda t, y, x: -(t - y)*x
+        self.v_grad_func = np.vectorize(grad_func)
+
+
     def forward(self, X: np.ndarray) -> np.ndarray:
         """
         Args:
@@ -58,12 +61,16 @@ class BinaryModel:
         Returns:
             y: output of model with shape [batch size, 1]
         """
-
         # TODO implement this function (Task 2a)
-        temp = np.dot(X,self.w)
-        y = 1/(1+np.exp(-temp))
+        
+        #y_func = lambda w, x: 1/(1 + np.exp(-w.dot(x)))
+        #Vectorize the function
+        #v_y_func = np.vectorize(y_func)
+        y = 1/(1 + np.exp(-X.dot(self.w)))
+        #print('Y shape', y.shape)
+        #y = np.array([[1/(1 + np.exp(-self.w.flatten().dot(x_i))) for x_i in X]])
+        #y = v_y_func(self.w, X)
         return y
-
 
     def backward(self, X: np.ndarray, outputs: np.ndarray, targets: np.ndarray) -> None:
         """
@@ -74,14 +81,19 @@ class BinaryModel:
             targets: labels/targets of each image of shape: [batch size, 1]
         """
         # TODO implement this function (Task 2a)
-
         assert targets.shape == outputs.shape,\
             f"Output shape: {outputs.shape}, targets: {targets.shape}"
         self.grad = np.zeros_like(self.w)
         assert self.grad.shape == self.w.shape,\
             f"Grad shape: {self.grad.shape}, w: {self.w.shape}"
+
+
+        #Calculating the gradients for each image and taking the mean of all the results
         
-        self.grad = X.T.dot((-(targets-outputs)))/X.shape[0]
+        self.grad = self.v_grad_func(targets, outputs, X).mean(axis=0).reshape(X.shape[1], 1)        
+        #This is also possible:
+        #   self.grad = X.T.dot((targets-outputs))/X.shape[0]
+        #However, I'm a bit unsure what is most efficient...
 
     def zero_grad(self) -> None:
         self.grad = None
@@ -107,7 +119,6 @@ def gradient_approximation_test(model: BinaryModel, X: np.ndarray, Y: np.ndarray
         model.w[i] = orig
         # Actual gradient
         logits = model.forward(X)
-
         model.backward(X, logits, Y)
         difference = gradient_approximation - model.grad[i, 0]
         assert abs(difference) <= epsilon**2,\
