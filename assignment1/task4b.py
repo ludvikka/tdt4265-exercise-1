@@ -123,6 +123,8 @@ if __name__ == "__main__":
     plt.savefig("task3b_softmax_train_accuracy.png")
     plt.show()
 
+    
+
     # Train a model with L2 regularization (task 4b)
 
     model1 = SoftmaxModel(l2_reg_lambda=1.0)
