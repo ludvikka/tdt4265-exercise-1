@@ -85,10 +85,16 @@ def one_hot_encode(Y: np.ndarray, num_classes: int):
     Returns:
         Y: shape [Num examples, num classes]
     """
-    R = np.zeros((len(Y),num_classes))
+    #My implementation
+    '''R = np.zeros((len(Y),num_classes))
     np.zeros
+
     for i in range(len(Y)):
         R[i,Y[i]] = 1
+    '''
+    #stolen from the web for increased performance
+    targets = np.array(Y).reshape(-1)
+    R = np.eye(num_classes)[targets]
     return R
     raise NotImplementedError
 

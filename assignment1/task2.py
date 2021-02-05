@@ -123,7 +123,9 @@ if __name__ == "__main__":
     plt.ylabel("Accuracy")
     plt.legend()
     plt.savefig("task2b_binary_train_accuracy.png")
+    #Testings
     plt.show()
+    
 
     # Task 2e - Create a comparison between training with and without shuffling
     shuffle_dataset = True

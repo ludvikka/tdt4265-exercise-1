@@ -131,15 +131,4 @@ if __name__ == "__main__":
         X_train, Y_train, X_val, Y_val,
     )
     train_history_reg01, val_history_reg01 = trainer.train(num_epochs)
-    # You can finish the rest of task 4 below this point.
-
-    # Plotting of softmax weights (Task 4b)
-    #plt.imsave("task4b_softmax_weight.png", weight, cmap="gray")
-
-    # Plotting of accuracy for difference values of lambdas (task 4c)
-    l2_lambdas = [1, .1, .01, .001]
-    plt.savefig("task4c_l2_reg_accuracy.png")
-
-    # Task 4d - Plotting of the l2 norm for each weight
-
-    plt.savefig("task4d_l2_reg_norms.png")
+    # Task 4b-e is in the file task4b.py
